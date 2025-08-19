@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: write
-  
 
 jobs:
   build:
@@ -42,7 +41,8 @@ jobs:
 
       - name: Build APK
         run: |
-          cordova build android --release
+          cd platforms/android
+          ./gradlew assembleRelease
 
       - name: Upload Release APK
         uses: softprops/action-gh-release@v1
