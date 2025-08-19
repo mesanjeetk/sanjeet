@@ -24,7 +24,7 @@ jobs:
 
       - name: ➕ Add Plugins
         run: |
-          cordova plugin add cordova-plugin-statusbar
+          cordova plugin add cordova-plugin-device cordova-plugin-vibration cordova-plugin-battery-status cordova-plugin-camera
 
       - name: 💾 Commit and Push
         run: |
