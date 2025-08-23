@@ -1,44 +1,68 @@
-document.addEventListener('deviceready', function () {
-  console.log('Device is ready!');
+let actionStack = [];
 
-  // --- Device Plugin ---
-  const deviceInfo = document.getElementById('device-info');
-  deviceInfo.querySelector('p').innerHTML = `
-    <b>Device:</b> ${device.model} <br>
-    <b>Platform:</b> ${device.platform} <br>
-    <b>Version:</b> ${device.version} <br>
-    <b>UUID:</b> ${device.uuid}
-  `;
+document.addEventListener("deviceready", onDeviceReady, false);
 
-  // --- Vibration Plugin ---
-  const vibrateBtn = document.getElementById('vibrate-btn');
-  vibrateBtn.addEventListener('click', () => {
-    navigator.vibrate([200, 100, 200]);
-  });
+function onDeviceReady() {
+  console.log("Cordova is ready");
 
-  // --- Battery Status Plugin ---
-  const batteryInfo = document.getElementById('battery-info');
-  window.addEventListener('batterystatus', function (status) {
-    batteryInfo.querySelector('p').innerHTML = `<b>Battery:</b> ${status.level}% ${status.isPlugged ? '(Charging)' : ''}`;
-  }, false);
+  document.addEventListener("backbutton", onBackKeyDown, false);
 
-  // --- Camera Plugin ---
-  const cameraBtn = document.getElementById('camera-btn');
-  const cameraPhoto = document.getElementById('camera-photo');
+  showPage('home');
+}
 
-  cameraBtn.addEventListener('click', () => {
-    navigator.camera.getPicture(
-      function (imageData) {
-        cameraPhoto.innerHTML = `<h2>Camera</h2><img src="data:image/jpeg;base64,${imageData}" />`;
-      },
-      function (err) {
-        alert('Camera error: ' + err);
-      },
-      {
-        quality: 50,
-        destinationType: Camera.DestinationType.DATA_URL
-      }
-    );
-  });
+// Action stack functions
+function pushAction(action) {
+  actionStack.push(action);
+  console.log("Action Stack:", actionStack);
+}
 
-}, false);
+function onBackKeyDown(e) {
+  if (actionStack.length > 0) {
+    e.preventDefault();
+    let lastAction = actionStack.pop();
+    if (typeof lastAction === "function") {
+      lastAction();
+    }
+  } else {
+    navigator.app.exitApp();
+  }
+}
+
+// ---------- Page navigation ----------
+function showPage(pageId) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(pageId).classList.add("active");
+}
+
+function openPage(pageId) {
+  const currentPage = document.querySelector(".page.active");
+  if (currentPage && currentPage.id !== pageId) {
+    pushAction(function () {
+      showPage(currentPage.id);
+    });
+    showPage(pageId);
+  }
+}
+
+// ---------- Modal ----------
+function openModal() {
+  const modal = document.getElementById("modal");
+  modal.style.display = "flex";
+  pushAction(closeModal);
+}
+
+function closeModal() {
+  const modal = document.getElementById("modal");
+  modal.style.display = "none";
+}
+
+// ---------- Sidebar ----------
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar.classList.contains("active")) {
+    sidebar.classList.remove("active");
+  } else {
+    sidebar.classList.add("active");
+    pushAction(() => sidebar.classList.remove("active")); // Back button closes sidebar
+  }
+}
